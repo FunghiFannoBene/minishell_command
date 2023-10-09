@@ -1,33 +1,12 @@
-int	end_check(char *s, int *i, t_redirect **command)
+#include <stdio.h>
+
+int main()
 {
-	int end;
-	if (s[*i] == (*command)->flag)
+	int i=0;
+	while(i<100000)
 	{
-		(*i)++;
-		end = *i;
-		(*command)->str = substring(s, end, (*command)->size);
-		if(s[*i] == '\0')
-		{
-			(*command)->next = NULL;
-			return(-2);
-		}
-		else
-			next_size(s, i, command);
-		return(-1);
+		printf("%d\n", i);
+		i++;
 	}
-	else if ((*command)->flag == 0 && s[*i] == '|')
-	{
-		(*i)++;
-		end = *i;
-		(*command)->str = substring(s, end, (*command)->size);
-		if(s[*i] == '\0')
-		{
-			(*command)->next = NULL;
-			return(-2);
-		}
-		else
-			next_size(s, i, command);
-		return(-1);
-	}
-	return 0;
+	return(0);
 }

@@ -102,10 +102,10 @@ char *substring(const char *str, size_t begin, size_t len)
 
 void next_size(char *s, int *i, t_redirect **command)
 {
-	(*command)->next = malloc(sizeof(t_redirect));
-	(*command) = (*command)->next;
 	(*command)->flag = 0;
+	(*command)->start = *i;
 	(*command)->size = 0;
+	
 }
 
 int	end_check(char *s, int *i, t_redirect **command)
@@ -126,9 +126,13 @@ int	end_check(char *s, int *i, t_redirect **command)
 	else if ((*command)->flag == 0 && s[*i] == '|')
 	{
 		(*i)++;
-		(*command)->str = substring(s, (*command)->start, (*command)->size);
+		(*command)->next = malloc(sizeof(t_redirect));
+		(*command)->next->str = substring(s, (*command)->start, (*command)->size);
+		(*command) = (*command)->next;
+		(*command)->flag = 0;
+		(*command)->size = 0;
 		check_and_skip_space(s, i);
-		(*command)->next = NULL;
+		(*command)->start = *i;
 		if(s[*i] == '\0')
 			return(-3);
 		return(-2);
@@ -165,6 +169,7 @@ int flag_zero_space(char *s, int *i, t_redirect **command)
 int	size_of_command(char *s, int *i, t_redirect **command)
 {
 	t_redirect *head = *command;
+	int variabile;
 	if (check_and_skip_space(s, i) == -1)
 		return (-1);
 	(*command)->flag = 0;
@@ -177,21 +182,18 @@ int	size_of_command(char *s, int *i, t_redirect **command)
 			continue ;
 		while (s[*i])
 		{
+			check_and_skip_space(s, i); //aggiunto questo
 			dollar_sign(s, i, command);
 			if (check_slashes(s, i, command) == -1)
 				continue;
-			if (end_check(s, i, command) == -1)
+			variabile = end_check(s, i, command);
+			if(variabile == -1)
 				break;
-			else if(end_check(s, i, command) == -2)
-			{
+			else if(variabile == -2)
 				return (1);
-				//pipe trovata esci. o fine stringa
-			}
-			else if(end_check(s, i, command) == -3)
-			{
+			else if(variabile == -3)
 				return (-1);
-				//Errore niente dopo i pipes
-			}
+
 			if(flag_zero_space(s, i, command) == -1)
 			{
 				break;
@@ -208,23 +210,57 @@ int	size_of_command(char *s, int *i, t_redirect **command)
 	}
 }
 
+
+
+
 void	create_command_list()
 {
 	t_redirect	*command;
 	t_redirect	*head;
+	t_pnode *structure;
+	t_pnode *structure_head;
+	t_pnode *structure_actual;
+	t_redirect *temp;
 	int			i;
-	char *s = "abcd c | c 234";
+	int			x;
+	int			command_record;
+	char *s = "abcd c d| c 234";
 	command = NULL;
+	structure_head = NULL;
 	i = 0;
-	if(search_command(s, &i, &command) == -1)
+
+	while(1)
 	{
-		printf("stringa completa, solo comando.");
-	}
-	else
-	{
+		if(search_command(s, &i, &command) == -1)
+			break;
 		head = command;
-		size_of_command(s, &i, &command);
-		printf("%d, string: %s", command->size, command->str);
+		command_record = size_of_command(s, &i, &command);
+		structure = malloc(sizeof(t_pnode));
+		if(structure_head == NULL)
+			structure_head = structure;
+		x=0;
+		command = head;
+		while(command)
+		{
+			x++;
+			command = command->next;
+		}
+		structure->args = malloc(sizeof(char *) * (x + 1));
+		x=0;
+		while(head)
+		{
+			structure->args[x] = strdup(head->str);
+			temp = head;
+			head = head->next;
+			free(temp);
+		}
+		structure->next = NULL;
+		structure_actual = structure_head;
+		while(structure_actual->next != NULL)
+			structure_actual = structure_actual->next;
+		structure_actual->next = structure;
+		if(command_record == -1)
+			break;
 	}
 }
 
